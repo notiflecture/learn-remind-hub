@@ -3,9 +3,13 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import CourseForm from '@/components/courses/CourseForm';
+import CourseList from '@/components/courses/CourseList';
+import LectureForm from '@/components/lectures/LectureForm';
 import { 
   BookOpen, 
   Calendar, 
@@ -61,6 +65,7 @@ const LecturerDashboard = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [upcomingLectures, setUpcomingLectures] = useState<Lecture[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -214,111 +219,131 @@ const LecturerDashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* My Courses */}
-        <Card className="shadow-card">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>My Courses</CardTitle>
-                <CardDescription>Courses you're teaching</CardDescription>
-              </div>
-              <Button variant="gradient" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                New Course
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {courses.map((course) => (
-                <div key={course.id} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: course.color }}
-                    />
-                    <div>
-                      <p className="font-medium">{course.title}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {course.course_code} • {course._count?.enrollments || 0} students
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={course.is_active ? "success" : "secondary"}>
-                      {course.is_active ? "Active" : "Inactive"}
-                    </Badge>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Management Tabs */}
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="courses">My Courses</TabsTrigger>
+          <TabsTrigger value="lectures">Lectures</TabsTrigger>
+        </TabsList>
 
-        {/* Upcoming Lectures */}
-        <Card className="shadow-card">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Upcoming Lectures</CardTitle>
-                <CardDescription>Your scheduled lectures</CardDescription>
-              </div>
-              <Button variant="gradient" size="sm">
-                <CalendarPlus className="h-4 w-4 mr-2" />
-                Schedule
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {upcomingLectures.map((lecture) => {
-                const dateTime = formatDateTime(lecture.scheduled_at);
-                return (
-                  <div key={lecture.id} className="flex items-center justify-between p-3 rounded-lg border">
-                    <div className="flex items-center gap-3">
-                      <div 
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: lecture.course.color }}
-                      />
-                      <div>
-                        <p className="font-medium">{lecture.title}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {lecture.course.course_code} • {dateTime.date} at {dateTime.time}
-                        </p>
-                        {lecture.location && (
-                          <p className="text-xs text-muted-foreground">📍 {lecture.location}</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="info">
-                        {lecture.duration_minutes}m
-                      </Badge>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* My Courses */}
+            <Card className="shadow-card">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>My Courses</CardTitle>
+                    <CardDescription>Courses you're teaching</CardDescription>
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                  <Button variant="gradient" size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Course
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {courses.map((course) => (
+                    <div key={course.id} className="flex items-center justify-between p-3 rounded-lg border">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-4 h-4 rounded-full"
+                          style={{ backgroundColor: course.color }}
+                        />
+                        <div>
+                          <p className="font-medium">{course.title}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {course.course_code} • {course._count?.enrollments || 0} students
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={course.is_active ? "success" : "secondary"}>
+                          {course.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Upcoming Lectures */}
+            <Card className="shadow-card">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Upcoming Lectures</CardTitle>
+                    <CardDescription>Your scheduled lectures</CardDescription>
+                  </div>
+                  <Button variant="gradient" size="sm">
+                    <CalendarPlus className="h-4 w-4 mr-2" />
+                    Schedule
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {upcomingLectures.map((lecture) => {
+                    const dateTime = formatDateTime(lecture.scheduled_at);
+                    return (
+                      <div key={lecture.id} className="flex items-center justify-between p-3 rounded-lg border">
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="w-4 h-4 rounded-full"
+                            style={{ backgroundColor: lecture.course.color }}
+                          />
+                          <div>
+                            <p className="font-medium">{lecture.title}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {lecture.course.course_code} • {dateTime.date} at {dateTime.time}
+                            </p>
+                            {lecture.location && (
+                              <p className="text-xs text-muted-foreground">📍 {lecture.location}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="info">
+                            {lecture.duration_minutes}m
+                          </Badge>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="courses" className="space-y-6">
+          <CourseForm onSuccess={() => setRefreshTrigger(prev => prev + 1)} />
+          <CourseList refreshTrigger={refreshTrigger} />
+        </TabsContent>
+
+        <TabsContent value="lectures" className="space-y-6">
+          <LectureForm onSuccess={() => setRefreshTrigger(prev => prev + 1)} />
+        </TabsContent>
+      </Tabs>
     </DashboardLayout>
   );
 };

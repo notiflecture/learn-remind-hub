@@ -3,8 +3,13 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import CourseForm from '@/components/courses/CourseForm';
+import CourseList from '@/components/courses/CourseList';
+import StudentForm from '@/components/students/StudentForm';
+import LectureForm from '@/components/lectures/LectureForm';
 import { 
   Users, 
   BookOpen, 
@@ -46,6 +51,7 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -189,91 +195,128 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Recent Users */}
-        <Card className="shadow-card">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Recent Users</CardTitle>
-                <CardDescription>Latest registered users</CardDescription>
-              </div>
-              <Button variant="outline" size="sm">
-                <UserPlus className="h-4 w-4 mr-2" />
-                Manage Users
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {users.map((user) => (
-                <div key={user.id} className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{user.full_name}</p>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={getRoleColor(user.role) as any}>
-                      {user.role}
-                    </Badge>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Management Tabs */}
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="courses">Courses</TabsTrigger>
+          <TabsTrigger value="students">Students</TabsTrigger>
+          <TabsTrigger value="lectures">Lectures</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
 
-        {/* Recent Courses */}
-        <Card className="shadow-card">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Recent Courses</CardTitle>
-                <CardDescription>Latest created courses</CardDescription>
-              </div>
-              <Button variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Course
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {courses.map((course) => (
-                <div key={course.id} className="flex items-center justify-between">
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Recent Users */}
+            <Card className="shadow-card">
+              <CardHeader>
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">{course.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {course.course_code} • {course.lecturer?.full_name}
-                    </p>
+                    <CardTitle>Recent Users</CardTitle>
+                    <CardDescription>Latest registered users</CardDescription>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={course.is_active ? "success" : "secondary"}>
-                      {course.is_active ? "Active" : "Inactive"}
-                    </Badge>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+                  <Button variant="outline" size="sm">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Manage Users
+                  </Button>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {users.map((user) => (
+                    <div key={user.id} className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{user.full_name}</p>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={getRoleColor(user.role) as any}>
+                          {user.role}
+                        </Badge>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Courses */}
+            <Card className="shadow-card">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Recent Courses</CardTitle>
+                    <CardDescription>Latest created courses</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Course
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {courses.map((course) => (
+                    <div key={course.id} className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{course.title}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {course.course_code} • {course.lecturer?.full_name}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={course.is_active ? "success" : "secondary"}>
+                          {course.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="courses" className="space-y-6">
+          <CourseForm onSuccess={() => setRefreshTrigger(prev => prev + 1)} />
+          <CourseList refreshTrigger={refreshTrigger} />
+        </TabsContent>
+
+        <TabsContent value="students" className="space-y-6">
+          <StudentForm />
+        </TabsContent>
+
+        <TabsContent value="lectures" className="space-y-6">
+          <LectureForm onSuccess={() => setRefreshTrigger(prev => prev + 1)} />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Analytics Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Analytics dashboard coming soon...</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </DashboardLayout>
   );
 };

@@ -19,10 +19,12 @@ export type Database = {
           color: string | null
           course_code: string
           created_at: string | null
+          department: string | null
           description: string | null
           id: string
           is_active: boolean | null
           lecturer_id: string
+          level: string | null
           title: string
           updated_at: string | null
         }
@@ -30,10 +32,12 @@ export type Database = {
           color?: string | null
           course_code: string
           created_at?: string | null
+          department?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
           lecturer_id: string
+          level?: string | null
           title: string
           updated_at?: string | null
         }
@@ -41,10 +45,12 @@ export type Database = {
           color?: string | null
           course_code?: string
           created_at?: string | null
+          department?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
           lecturer_id?: string
+          level?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -208,27 +214,33 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string | null
+          department: string | null
           email: string
           full_name: string
           id: string
+          level: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
+          department?: string | null
           email: string
           full_name: string
           id: string
+          level?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string | null
+          department?: string | null
           email?: string
           full_name?: string
           id?: string
+          level?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
