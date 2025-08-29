@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +21,13 @@ const DEPARTMENTS = [
 
 const LEVELS = ['ND 1', 'ND 2', 'HND 1', 'HND 2'];
 
+interface Lecturer {
+  id: string;
+  full_name: string;
+  email: string;
+  department: string;
+}
+
 interface CourseFormProps {
   onSuccess?: () => void;
 }
@@ -28,6 +36,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ onSuccess }) => {
   const { profile, isAdmin } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [lecturers, setLecturers] = useState<Lecturer[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     course_code: '',
@@ -37,6 +46,31 @@ const CourseForm: React.FC<CourseFormProps> = ({ onSuccess }) => {
     lecturer_id: profile?.id || '',
     color: '#3B82F6'
   });
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchLecturers();
+    }
+  }, [isAdmin]);
+
+  const fetchLecturers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, department')
+        .eq('role', 'lecturer')
+        .order('full_name');
+
+      if (error) throw error;
+      setLecturers(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,6 +178,24 @@ const CourseForm: React.FC<CourseFormProps> = ({ onSuccess }) => {
               </Select>
             </div>
           </div>
+
+          {isAdmin && (
+            <div className="space-y-2">
+              <Label htmlFor="lecturer_id">Lecturer</Label>
+              <Select value={formData.lecturer_id} onValueChange={(value) => setFormData({ ...formData, lecturer_id: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select lecturer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {lecturers.map((lecturer) => (
+                    <SelectItem key={lecturer.id} value={lecturer.id}>
+                      {lecturer.full_name} ({lecturer.department})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="color">Course Color</Label>

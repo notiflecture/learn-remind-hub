@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import CourseForm from '@/components/courses/CourseForm';
 import CourseList from '@/components/courses/CourseList';
 import StudentForm from '@/components/students/StudentForm';
+import LecturerForm from '@/components/lecturers/LecturerForm';
 import LectureForm from '@/components/lectures/LectureForm';
 import { 
   Users, 
@@ -197,10 +198,11 @@ const AdminDashboard = () => {
 
       {/* Management Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="courses">Courses</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
+          <TabsTrigger value="lecturers">Lecturers</TabsTrigger>
           <TabsTrigger value="lectures">Lectures</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
@@ -300,6 +302,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="students" className="space-y-6">
           <StudentForm />
+        </TabsContent>
+
+        <TabsContent value="lecturers" className="space-y-6">
+          <LecturerForm />
         </TabsContent>
 
         <TabsContent value="lectures" className="space-y-6">
