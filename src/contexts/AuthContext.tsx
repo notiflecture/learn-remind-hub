@@ -9,6 +9,9 @@ interface Profile {
   full_name: string;
   role: 'admin' | 'lecturer' | 'student';
   avatar_url?: string;
+  department?: string;
+  level?: string;
+  notification_email?: string;
   created_at: string;
   updated_at: string;
 }
@@ -51,7 +54,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.code !== 'PGRST116') { // Not found error
+          console.error('Error fetching profile:', error);
+        }
+        return;
+      }
+      
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);

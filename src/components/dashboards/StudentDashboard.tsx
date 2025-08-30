@@ -3,6 +3,8 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import EmailPreferences from '@/components/EmailPreferences';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -13,7 +15,10 @@ import {
   CheckCircle,
   Search,
   Eye,
-  UserPlus
+  UserPlus,
+  Settings,
+  MapPin,
+  ExternalLink
 } from 'lucide-react';
 
 interface StudentStats {
@@ -237,124 +242,153 @@ const StudentDashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* My Courses */}
-        <Card className="shadow-card">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>My Courses</CardTitle>
-                <CardDescription>Courses you're enrolled in</CardDescription>
-              </div>
-              <Button variant="gradient" size="sm">
-                <Search className="h-4 w-4 mr-2" />
-                Browse
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {enrollments.map((enrollment) => (
-                <div key={enrollment.id} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: enrollment.course.color }}
-                    />
-                    <div>
-                      <p className="font-medium">{enrollment.course.title}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {enrollment.course.course_code} • {enrollment.course.lecturer.full_name}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="info">
-                      Enrolled
-                    </Badge>
-                    <Button variant="ghost" size="sm">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              {enrollments.length === 0 && (
-                <div className="text-center py-8">
-                  <UserPlus className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No courses enrolled yet</p>
-                  <Button variant="outline" size="sm" className="mt-2">
-                    Browse Courses
-                  </Button>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="courses" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="courses">My Courses</TabsTrigger>
+          <TabsTrigger value="lectures">Upcoming Lectures</TabsTrigger>
+          <TabsTrigger value="preferences">Email Preferences</TabsTrigger>
+        </TabsList>
 
-        {/* Upcoming Lectures */}
-        <Card className="shadow-card">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Upcoming Lectures</CardTitle>
-                <CardDescription>Your scheduled classes</CardDescription>
+        <TabsContent value="courses">
+          <Card className="shadow-card">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>My Courses</CardTitle>
+                  <CardDescription>Courses you're enrolled in</CardDescription>
+                </div>
+                <Button variant="gradient" size="sm">
+                  <Search className="h-4 w-4 mr-2" />
+                  Browse
+                </Button>
               </div>
-              <Button variant="outline" size="sm">
-                <Calendar className="h-4 w-4 mr-2" />
-                View All
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {upcomingLectures.map((lecture) => {
-                const dateTime = formatDateTime(lecture.scheduled_at);
-                const isToday = isLectureToday(lecture.scheduled_at);
-                return (
-                  <div key={lecture.id} className={`flex items-center justify-between p-3 rounded-lg border ${isToday ? 'border-primary bg-primary/5' : ''}`}>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {enrollments.map((enrollment) => (
+                  <div key={enrollment.id} className="flex items-center justify-between p-3 rounded-lg border">
                     <div className="flex items-center gap-3">
                       <div 
                         className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: lecture.course.color }}
+                        style={{ backgroundColor: enrollment.course.color }}
                       />
                       <div>
-                        <p className="font-medium">{lecture.title}</p>
+                        <p className="font-medium">{enrollment.course.title}</p>
                         <p className="text-sm text-muted-foreground">
-                          {lecture.course.course_code} • {dateTime.date} at {dateTime.time}
+                          {enrollment.course.course_code} • {enrollment.course.lecturer.full_name}
                         </p>
-                        {lecture.location && (
-                          <p className="text-xs text-muted-foreground">📍 {lecture.location}</p>
-                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {isToday && (
-                        <Badge variant="warning">
-                          Today
-                        </Badge>
-                      )}
                       <Badge variant="info">
-                        {lecture.duration_minutes}m
+                        Enrolled
                       </Badge>
-                      {lecture.meeting_url && (
-                        <Button variant="ghost" size="sm">
-                          Join
-                        </Button>
-                      )}
+                      <Button variant="ghost" size="sm">
+                        <Eye className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                );
-              })}
-              {upcomingLectures.length === 0 && (
-                <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No upcoming lectures</p>
+                ))}
+                {enrollments.length === 0 && (
+                  <div className="text-center py-8">
+                    <UserPlus className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No courses enrolled yet</p>
+                    <Button variant="outline" size="sm" className="mt-2">
+                      Browse Courses
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="lectures">
+          <Card className="shadow-card">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Upcoming Lectures</CardTitle>
+                  <CardDescription>Your scheduled classes with detailed information</CardDescription>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                <Button variant="outline" size="sm">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  View All
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {upcomingLectures.map((lecture) => {
+                  const dateTime = formatDateTime(lecture.scheduled_at);
+                  const isToday = isLectureToday(lecture.scheduled_at);
+                  return (
+                    <div key={lecture.id} className={`p-4 rounded-lg border ${isToday ? 'border-primary bg-primary/5' : ''}`}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-3">
+                          <div 
+                            className="w-4 h-4 rounded-full mt-1"
+                            style={{ backgroundColor: lecture.course.color }}
+                          />
+                          <div className="space-y-1">
+                            <p className="font-medium">{lecture.title}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {lecture.course.course_code} - {lecture.course.title}
+                            </p>
+                            <div className="space-y-1">
+                              <div className="flex items-center text-sm text-muted-foreground">
+                                <Calendar className="mr-2 h-4 w-4" />
+                                {dateTime.date} at {dateTime.time}
+                              </div>
+                              <div className="flex items-center text-sm text-muted-foreground">
+                                <Clock className="mr-2 h-4 w-4" />
+                                {lecture.duration_minutes} minutes
+                              </div>
+                              {lecture.location && (
+                                <div className="flex items-center text-sm text-muted-foreground">
+                                  <MapPin className="mr-2 h-4 w-4" />
+                                  {lecture.location}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isToday && (
+                            <Badge variant="warning">
+                              Today
+                            </Badge>
+                          )}
+                          {lecture.meeting_url && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => window.open(lecture.meeting_url, '_blank')}
+                            >
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              Join Meeting
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {upcomingLectures.length === 0 && (
+                  <div className="text-center py-8">
+                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No upcoming lectures</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="preferences">
+          <EmailPreferences />
+        </TabsContent>
+      </Tabs>
     </DashboardLayout>
   );
 };
