@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import CourseForm from '@/components/courses/CourseForm';
 import CourseList from '@/components/courses/CourseList';
 import LectureForm from '@/components/lectures/LectureForm';
+import LectureList from '@/components/lectures/LectureList';
 import { 
   BookOpen, 
   Calendar, 
@@ -342,6 +343,7 @@ const LecturerDashboard = () => {
 
         <TabsContent value="lectures" className="space-y-6">
           <LectureForm onSuccess={() => setRefreshTrigger(prev => prev + 1)} />
+          <LectureList refreshTrigger={refreshTrigger} />
         </TabsContent>
       </Tabs>
     </DashboardLayout>

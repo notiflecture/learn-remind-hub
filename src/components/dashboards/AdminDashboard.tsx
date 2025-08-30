@@ -11,6 +11,7 @@ import CourseList from '@/components/courses/CourseList';
 import StudentForm from '@/components/students/StudentForm';
 import LecturerForm from '@/components/lecturers/LecturerForm';
 import LectureForm from '@/components/lectures/LectureForm';
+import LectureList from '@/components/lectures/LectureList';
 import { 
   Users, 
   BookOpen, 
@@ -310,6 +311,7 @@ const AdminDashboard = () => {
 
         <TabsContent value="lectures" className="space-y-6">
           <LectureForm onSuccess={() => setRefreshTrigger(prev => prev + 1)} />
+          <LectureList refreshTrigger={refreshTrigger} />
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
