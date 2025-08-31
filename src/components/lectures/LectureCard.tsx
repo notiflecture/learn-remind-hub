@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import emailjs from '@emailjs/browser';
 import { 
   Calendar, 
   Clock, 
@@ -103,7 +104,8 @@ const LectureCard: React.FC<LectureCardProps> = ({ lecture, onUpdate }) => {
         emailPreferences?.map(pref => [pref.user_id, pref]) || []
       );
 
-      // Prepare notifications for students who have lecture reminders enabled
+      // Send emails to students who have lecture reminders enabled
+      const emailsSent = [];
       const notifications = [];
       const dateTime = formatDateTime(lecture.scheduled_at);
       
@@ -121,59 +123,81 @@ const LectureCard: React.FC<LectureCardProps> = ({ lecture, onUpdate }) => {
         const studentEmail = emailPref?.notification_email || profile.notification_email || profile.email;
         console.log(`📧 Sending reminder to ${profile.full_name} at ${studentEmail}`);
 
-        const subject = `Reminder: ${lecture.title}`;
-        const message = `
-Dear ${profile.full_name},
+        try {
+          // Send email via EmailJS
+          await emailjs.send(
+            'service_uw8e6jp', // EmailJS service ID
+            'template_3smtuc7', // Your template ID
+            {
+              to_email: studentEmail,
+              student_name: profile.full_name,
+              lecture_title: lecture.title,
+              course_title: `${lecture.course.course_code} - ${lecture.course.title}`,
+              lecture_date: dateTime.date,
+              lecture_time: dateTime.time,
+              duration_minutes: lecture.duration_minutes,
+              location: lecture.location || 'Online',
+              meeting_url: lecture.meeting_url || '',
+              description: lecture.description || ''
+            },
+            'iqrbya988WpE1wUcR' // Your public key
+          );
 
-This is a reminder about your upcoming lecture:
+          emailsSent.push(studentEmail);
+          console.log(`✅ Email sent successfully to ${studentEmail}`);
 
-📚 Course: ${lecture.course.course_code} - ${lecture.course.title}
-📝 Lecture: ${lecture.title}
-📅 Date: ${dateTime.date}
-🕐 Time: ${dateTime.time}
-⏱️ Duration: ${lecture.duration_minutes} minutes
-${lecture.location ? `📍 Location: ${lecture.location}` : ''}
-${lecture.meeting_url ? `🔗 Meeting Link: ${lecture.meeting_url}` : ''}
+          // Create notification record for successful send
+          notifications.push({
+            lecture_id: lecture.id,
+            recipient_id: enrollment.student_id,
+            email: studentEmail,
+            subject: `Reminder: ${lecture.title}`,
+            message: `Lecture reminder sent for ${lecture.course.course_code} - ${lecture.title} on ${dateTime.date} at ${dateTime.time}`,
+            status: 'sent',
+            sent_at: new Date().toISOString(),
+            scheduled_for: new Date().toISOString()
+          });
 
-${lecture.description ? `Description: ${lecture.description}` : ''}
-
-Please make sure to attend on time.
-
-Best regards,
-LectureHub Team
-        `.trim();
-
-        notifications.push({
-          lecture_id: lecture.id,
-          recipient_id: enrollment.student_id,
-          email: studentEmail,
-          subject,
-          message,
-          scheduled_for: new Date().toISOString()
-        });
+        } catch (emailError) {
+          console.error(`❌ Failed to send email to ${studentEmail}:`, emailError);
+          
+          // Create notification record for failed send
+          notifications.push({
+            lecture_id: lecture.id,
+            recipient_id: enrollment.student_id,
+            email: studentEmail,
+            subject: `Reminder: ${lecture.title}`,
+            message: `Failed to send lecture reminder for ${lecture.course.course_code} - ${lecture.title}`,
+            status: 'failed',
+            error_message: emailError.message || 'Unknown error',
+            scheduled_for: new Date().toISOString()
+          });
+        }
       }
 
-      if (notifications.length === 0) {
+      if (emailsSent.length === 0) {
         toast({
-          title: "No notifications to send",
-          description: "All enrolled students have lecture reminders disabled.",
+          title: "No emails sent",
+          description: "No reminders were sent. Check student preferences or try again.",
           variant: "destructive",
         });
         return;
       }
 
-      // Insert notifications into the database
-      const { error: insertError } = await supabase
-        .from('notifications')
-        .insert(notifications);
+      // Insert notification records into the database
+      if (notifications.length > 0) {
+        const { error: insertError } = await supabase
+          .from('notifications')
+          .insert(notifications);
 
-      if (insertError) {
-        throw insertError;
+        if (insertError) {
+          console.error('Error saving notification records:', insertError);
+        }
       }
 
       toast({
         title: "Reminders sent!",
-        description: `Lecture reminders sent to ${notifications.length} student(s).`,
+        description: `Email reminders sent to ${emailsSent.length} student(s).`,
       });
 
     } catch (error: any) {
