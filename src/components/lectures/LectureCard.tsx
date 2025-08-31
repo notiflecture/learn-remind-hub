@@ -93,18 +93,18 @@ const LectureCard: React.FC<LectureCardProps> = ({ lecture, onUpdate }) => {
         return;
       }
 
-      // Get email preferences for each student
+      // Get email preferences for each student (for notification email only)
       const studentIds = enrollments.map(e => e.student_id);
       const { data: emailPreferences } = await supabase
         .from('email_preferences')
-        .select('user_id, notification_email, lecture_reminders')
+        .select('user_id, notification_email')
         .in('user_id', studentIds);
 
       const emailPrefsMap = new Map(
         emailPreferences?.map(pref => [pref.user_id, pref]) || []
       );
 
-      // Send emails to students who have lecture reminders enabled
+      // Send emails to ALL students (reminders are mandatory)
       const emailsSent = [];
       const notifications = [];
       const dateTime = formatDateTime(lecture.scheduled_at);
@@ -112,16 +112,10 @@ const LectureCard: React.FC<LectureCardProps> = ({ lecture, onUpdate }) => {
       for (const enrollment of enrollments) {
         const profile = enrollment.profiles;
         const emailPref = emailPrefsMap.get(enrollment.student_id);
-        
-        // Skip if lecture reminders are disabled
-        if (emailPref && !emailPref.lecture_reminders) {
-          console.log(`🚫 Skipping reminder for ${profile.full_name} (${profile.email}) - lecture reminders disabled`);
-          continue;
-        }
 
         // Use notification email from preferences or fall back to profile email
         const studentEmail = emailPref?.notification_email || profile.notification_email || profile.email;
-        console.log(`📧 Sending reminder to ${profile.full_name} at ${studentEmail}`);
+        console.log(`📧 Sending mandatory reminder to ${profile.full_name} at ${studentEmail}`);
 
         try {
           // Send email via EmailJS
