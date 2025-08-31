@@ -269,18 +269,16 @@ const LectureCard: React.FC<LectureCardProps> = ({ lecture, onUpdate }) => {
           </div>
 
           <div className="flex flex-wrap gap-2 pt-2">
-            {!isPast && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={sendLectureReminder}
-                disabled={sendingReminder || lecture.is_cancelled}
-                className="flex items-center gap-2"
-              >
-                <Send className="h-4 w-4" />
-                {sendingReminder ? 'Sending...' : 'Send Reminder'}
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={sendLectureReminder}
+              disabled={sendingReminder}
+              className="flex items-center gap-2"
+            >
+              <Send className="h-4 w-4" />
+              {sendingReminder ? 'Sending...' : 'Send Reminder'}
+            </Button>
             
             {lecture.meeting_url && (
               <Button 
