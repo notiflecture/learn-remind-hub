@@ -6,18 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-interface EmailJSPayload {
-  service_id: string;
-  template_id: string;
-  user_id: string;
-  template_params: {
-    to_email: string;
-    student_name: string;
-    subject: string;
-    message: string;
-  };
-}
-
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -34,13 +22,28 @@ Deno.serve(async (req: Request) => {
   try {
     console.log("Processing pending notifications...");
     
-    // Get pending notifications
+    // Get pending notifications that are due
     const { data: notifications, error: notificationsError } = await supabase
       .from('notifications')
-      .select('*')
+      .select(`
+        *,
+        lecture:lecture_id (
+          title,
+          scheduled_at,
+          location,
+          meeting_url,
+          course:course_id (
+            title,
+            course_code
+          )
+        ),
+        profile:recipient_id (
+          full_name
+        )
+      `)
       .eq('status', 'pending')
       .lte('scheduled_for', new Date().toISOString())
-      .limit(50); // Process in batches
+      .limit(50);
 
     if (notificationsError) {
       console.error("Error fetching notifications:", notificationsError);
@@ -66,16 +69,23 @@ Deno.serve(async (req: Request) => {
 
     for (const notification of notifications) {
       try {
-        // Prepare EmailJS payload
-        const emailPayload: EmailJSPayload = {
-          service_id: "service_your_service_id", // This should be configured in environment
-          template_id: "template_your_template_id", // This should be configured in environment
-          user_id: "your_emailjs_public_key", // This should be configured in environment
+        // Prepare email data for EmailJS
+        const emailData = {
+          service_id: 'service_3ux4e79',
+          template_id: 'template_3smtuc7',
+          user_id: 'iqrbya988WpE1wUcR',
           template_params: {
             to_email: notification.email,
-            student_name: "Student", // We could enhance this by joining with profiles
+            student_name: notification.profile?.full_name || 'Student',
             subject: notification.subject,
-            message: notification.message
+            message: notification.message,
+            lecture_title: notification.lecture?.title || '',
+            course_title: notification.lecture?.course?.title || '',
+            course_code: notification.lecture?.course?.course_code || '',
+            lecture_time: notification.lecture?.scheduled_at ? 
+              new Date(notification.lecture.scheduled_at).toLocaleString() : '',
+            location: notification.lecture?.location || 'Online',
+            meeting_url: notification.lecture?.meeting_url || ''
           }
         };
 
@@ -85,7 +95,7 @@ Deno.serve(async (req: Request) => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(emailPayload)
+          body: JSON.stringify(emailData)
         });
 
         if (emailResponse.ok) {
@@ -99,10 +109,10 @@ Deno.serve(async (req: Request) => {
             .eq('id', notification.id);
           
           successCount++;
-          console.log(`Notification sent successfully to ${notification.email}`);
+          console.log(`✅ Notification sent successfully to ${notification.email}`);
         } else {
           const errorText = await emailResponse.text();
-          console.error(`Failed to send notification to ${notification.email}:`, errorText);
+          console.error(`❌ Failed to send notification to ${notification.email}:`, errorText);
           
           // Update notification status to failed
           await supabase
