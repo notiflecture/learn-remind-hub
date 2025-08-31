@@ -120,7 +120,7 @@ const LectureCard: React.FC<LectureCardProps> = ({ lecture, onUpdate }) => {
         try {
           // Send email via EmailJS
           await emailjs.send(
-            'service_uw8e6jp', // EmailJS service ID
+            'service_3ux4e79', // EmailJS service ID
             'template_3smtuc7', // Your template ID
             {
               to_email: studentEmail,
