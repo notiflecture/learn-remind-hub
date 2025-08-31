@@ -113,11 +113,13 @@ const LectureCard: React.FC<LectureCardProps> = ({ lecture, onUpdate }) => {
         
         // Skip if lecture reminders are disabled
         if (emailPref && !emailPref.lecture_reminders) {
+          console.log(`🚫 Skipping reminder for ${profile.full_name} (${profile.email}) - lecture reminders disabled`);
           continue;
         }
 
         // Use notification email from preferences or fall back to profile email
         const studentEmail = emailPref?.notification_email || profile.notification_email || profile.email;
+        console.log(`📧 Sending reminder to ${profile.full_name} at ${studentEmail}`);
 
         const subject = `Reminder: ${lecture.title}`;
         const message = `
