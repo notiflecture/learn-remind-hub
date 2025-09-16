@@ -184,19 +184,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const createUser = async (email: string, password: string, userData: any) => {
     setIsCreatingUser(true);
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: userData
-        }
+      const response = await fetch(`https://btkbqkyfdmbwboutvxda.supabase.co/functions/v1/create-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0a2Jxa3lmZG1id2JvdXR2eGRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxNTE1MTAsImV4cCI6MjA3MTcyNzUxMH0.jEzHAvbTJMp3dqSVK-p2rt8vnRHNdAH2CGhUqBWZWQk`,
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          userData
+        }),
       });
 
-      if (error) throw error;
-
-      // Sign out the newly created user immediately to keep admin signed in
-      await supabase.auth.signOut();
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create user');
+      }
       
       return { error: null };
     } catch (error: any) {
