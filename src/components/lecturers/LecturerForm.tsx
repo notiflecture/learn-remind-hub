@@ -18,7 +18,7 @@ const DEPARTMENTS = [
 ];
 
 const LecturerForm: React.FC = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, createUser } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -33,17 +33,10 @@ const LecturerForm: React.FC = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: formData.full_name,
-            role: 'lecturer',
-            department: formData.department
-          }
-        }
+      const { error } = await createUser(formData.email, formData.password, {
+        full_name: formData.full_name,
+        role: 'lecturer',
+        department: formData.department
       });
 
       if (error) throw error;

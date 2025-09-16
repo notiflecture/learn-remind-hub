@@ -23,6 +23,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string, role?: string) => Promise<{ error: any }>;
+  createUser: (email: string, password: string, userData: any) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
   isLecturer: boolean;
@@ -44,6 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
   const { toast } = useToast();
 
   const fetchProfile = async (userId: string) => {
@@ -71,6 +73,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // Prevent auth state changes when admin is creating users
+        if (isCreatingUser) {
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -99,10 +106,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchProfile(session.user.id);
       }
       setLoading(false);
+    }).catch((error) => {
+      // Handle session errors gracefully to prevent flickering
+      console.warn('Session recovery failed:', error);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isCreatingUser]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -170,6 +181,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const createUser = async (email: string, password: string, userData: any) => {
+    setIsCreatingUser(true);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: userData
+        }
+      });
+
+      if (error) throw error;
+
+      // Sign out the newly created user immediately to keep admin signed in
+      await supabase.auth.signOut();
+      
+      return { error: null };
+    } catch (error: any) {
+      return { error };
+    } finally {
+      setIsCreatingUser(false);
+    }
+  };
+
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -197,6 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     signIn,
     signUp,
+    createUser,
     signOut,
     isAdmin,
     isLecturer,
