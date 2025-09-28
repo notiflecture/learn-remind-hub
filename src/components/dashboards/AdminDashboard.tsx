@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import CourseForm from '@/components/courses/CourseForm';
 import CourseList from '@/components/courses/CourseList';
+import CourseManagement from '@/components/courses/CourseManagement';
 import StudentForm from '@/components/students/StudentForm';
 import LecturerForm from '@/components/lecturers/LecturerForm';
 import LectureForm from '@/components/lectures/LectureForm';
@@ -298,7 +299,7 @@ const AdminDashboard = () => {
 
         <TabsContent value="courses" className="space-y-6">
           <CourseForm onSuccess={() => setRefreshTrigger(prev => prev + 1)} />
-          <CourseList refreshTrigger={refreshTrigger} />
+          <CourseManagement refreshTrigger={refreshTrigger} />
         </TabsContent>
 
         <TabsContent value="students" className="space-y-6">
