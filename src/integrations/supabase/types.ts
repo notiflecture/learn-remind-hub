@@ -292,7 +292,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      process_pending_notifications: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      send_due_notifications: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      send_lecture_reminder_notifications: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       notification_status: "pending" | "sent" | "failed"
