@@ -6,8 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import CourseForm from '@/components/courses/CourseForm';
-import CourseList from '@/components/courses/CourseList';
+import CourseAssignment from '@/components/courses/CourseAssignment';
 import CourseManagement from '@/components/courses/CourseManagement';
 import StudentForm from '@/components/students/StudentForm';
 import LecturerForm from '@/components/lecturers/LecturerForm';
@@ -298,7 +297,7 @@ const AdminDashboard = () => {
         </TabsContent>
 
         <TabsContent value="courses" className="space-y-6">
-          <CourseForm onSuccess={() => setRefreshTrigger(prev => prev + 1)} />
+          <CourseAssignment onSuccess={() => setRefreshTrigger(prev => prev + 1)} />
           <CourseManagement refreshTrigger={refreshTrigger} />
         </TabsContent>
 
