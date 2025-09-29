@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import CourseForm from '@/components/courses/CourseForm';
 import CourseList from '@/components/courses/CourseList';
-import LectureForm from '@/components/lectures/LectureForm';
+import LectureScheduling from '@/components/lectures/LectureScheduling';
 import LectureList from '@/components/lectures/LectureList';
 import { 
   BookOpen, 
@@ -342,7 +342,7 @@ const LecturerDashboard = () => {
         </TabsContent>
 
         <TabsContent value="lectures" className="space-y-6">
-          <LectureForm onSuccess={() => setRefreshTrigger(prev => prev + 1)} />
+          <LectureScheduling onSuccess={() => setRefreshTrigger(prev => prev + 1)} />
           <LectureList refreshTrigger={refreshTrigger} />
         </TabsContent>
       </Tabs>
